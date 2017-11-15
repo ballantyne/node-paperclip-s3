@@ -1,0 +1,27 @@
+{
+  "name": "node-paperclip-s3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ballantyne/node-paperclip-s3.git"
+  },
+  "keywords": [
+    "paperclip",
+    "s3"
+  ],
+  "author": "Scott Ballantyne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ballantyne/node-paperclip-s3/issues"
+  },
+  "homepage": "https://github.com/ballantyne/node-paperclip-s3#readme",
+  "dependencies": {
+    "aws-sdk": "^2.150.0",
+    "klass": "^1.4.1"
+  }
+}
