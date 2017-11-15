@@ -39,8 +39,6 @@ var Storage = klass(function(options) {
 
   this.s3 = new AWS.S3( { params: { bucket: config.bucket } } )
 
-  console.log(this);
-
 }).methods({
 
   stream: function(stream, key, next) {
