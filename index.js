@@ -2,21 +2,45 @@ const klass     = require('klass');
 const AWS       = require('aws-sdk');
 const crypto    = require('crypto');
 const fs        = require('fs');
+const _         = require('underscore');
 
-AWS.config.update({
-  region: process.env.AWS_REGION, 
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID, 
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
-
-const s3bucket = new AWS.S3( { params: { bucket: process.env.AWS_BUCKET } } )
+var config      = {};
 
 var Storage = klass(function(options) {
-  if (options.acl == undefined) {
-    this.acl = 'public-read';
-  } else {
-    this.acl = options.acl;
+  if (options.s3) {
+    _.extend(config, options.s3);
   }
+  
+  if (config.acl == undefined) {
+    config.acl = 'public-read';
+  }
+
+  if (config.region == undefined) {
+    config.region = process.env.AWS_REGION;
+  }
+
+  if (config.key == undefined) {
+    config.key = process.env.AWS_ACCESS_KEY_ID;
+  }
+
+  if (config.secret == undefined) {
+    config.secret = process.env.AWS_SECRET_ACCESS_KEY;
+  }
+
+  if (config.bucket == undefined) {
+    config.bucket = process.env.AWS_BUCKET;
+  } 
+  
+  AWS.config.update({
+    region: config.region, 
+    accessKeyId: config.key, 
+    secretAccessKey: config.secret
+  });
+
+  this.s3 = new AWS.S3( { params: { bucket: config.bucket } } )
+
+  console.log(this);
+
 }).methods({
 
   stream: function(stream, key, next) {
@@ -24,13 +48,13 @@ var Storage = klass(function(options) {
     var self = this;
     stream.on('open', function () {
       var params = {
-        ACL:    self.acl, 
-        Bucket: process.env.AWS_BUCKET, 
+        ACL:    config.acl, 
+        Bucket: config.bucket, 
         Key:    key,
         Body:   stream
       };
 
-      s3bucket.putObject(params, function(err, data){
+      self.s3.putObject(params, function(err, data){
         if (next) {
           console.log('finished streaming file', key);
           next(err, data);
@@ -54,14 +78,15 @@ var Storage = klass(function(options) {
   },
 
   put: function(key, body, next) {
+    var self = this;
     var params = {
-      ACL:    this.acl, 
-      Bucket: process.env.AWS_BUCKET, 
+      ACL:    config.acl, 
+      Bucket: config.bucket, 
       Key:    key, 
       Body:   body
     };
 
-    s3bucket.putObject(params, function(err, data){
+    self.s3.putObject(params, function(err, data){
       if (next) {
         next(err, data);
       }
@@ -70,11 +95,11 @@ var Storage = klass(function(options) {
 
   get: function(key, next) {
     var params = {
-      Bucket: process.env.AWS_BUCKET, 
+      Bucket: config.bucket, 
       Key:    key 
     }
 
-    s3bucket.getObject(params, function(err, data) {
+    self.s3.getObject(params, function(err, data) {
       var data = data.Body.toString('utf-8'); 
       if (next) {
         next(err, data);
@@ -83,12 +108,13 @@ var Storage = klass(function(options) {
   },
 
   delete: function(key, next) {
+    var self = this;
     var params = {
-      Bucket: process.env.AWS_BUCKET, 
+      Bucket: config.bucket, 
       Key:    key 
     }
 
-    s3bucket.deleteObject(params, function (err, data) {
+    self.s3.deleteObject(params, function (err, data) {
       if (next) {
         next(err, key);
       }
@@ -96,18 +122,18 @@ var Storage = klass(function(options) {
   },
 
   move: function(oldkey, key, next) {
-    var bucket = process.env.AWS_BUCKET;
+    var self       = this;
     var parameters = {
-      Bucket:       bucket, 
+      Bucket:       config.bucket, 
       Key:          key, 
       CopySource:   bucket + '/' + oldkey
     };
 
-    s3bucket.waitFor('objectExists', {Bucket: bucket, Key: oldkey}, function(err, data) {
-      s3bucket.copyObject(parameters, function(err, data){
+    self.s3.waitFor('objectExists', {Bucket: config.bucket, Key: oldkey}, function(err, data) {
+      self.s3.copyObject(parameters, function(err, data){
         console.log('copied', parameters, err, data);
         var params = {
-          Bucket:     process.env.AWS_BUCKET, 
+          Bucket:     config.bucket, 
           Key:        oldkey
         };
 

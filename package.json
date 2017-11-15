@@ -22,6 +22,7 @@
   "homepage": "https://github.com/ballantyne/node-paperclip-s3#readme",
   "dependencies": {
     "aws-sdk": "^2.150.0",
-    "klass": "^1.4.1"
+    "klass": "^1.4.1",
+    "underscore": "^1.8.3"
   }
 }
