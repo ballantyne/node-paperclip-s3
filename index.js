@@ -65,14 +65,14 @@ var Storage = klass(function(options) {
   generateKey: function(fieldname, filename) {
     
     var now = new Date().getTime().toString();
-    var extension = filename.split('.').pop();
-    const hash = crypto.createHmac('sha256', fieldname+now)
+    var extension = path.extname(filename);
+    const hash    = crypto.createHmac('sha256', fieldname+now)
       .update(filename)
       .digest('hex');
 
-    var key = 'tmp/' + fieldname + "-" + hash + "." + extension;
-    
+    var key       = 'tmp/' + fieldname + "-" + hash + "." + extension;
     return key;
+  
   },
 
   put: function(key, body, next) {
